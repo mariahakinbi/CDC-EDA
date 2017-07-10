@@ -1,0 +1,158 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(plotly)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `brfss2013`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+Testing a gradee's paper below
+```{r}
+Excel_health <- brfss2013 %>% filter(genhlth == "Excellent")
+
+ggplot(data = Excel_health, aes(x = sleptim1)) + geom_histogram(binwidth = 1)
+
+mean(Excel_health$sleptim1)
+
+Excel_health<-Excel_health[complete.cases(Excel_health[ , c("sleptim1")]),]
+NROW(is.na(Excel_health$sleptim1))
+mean(Excel_health$sleptim1)
+
+brfss2013 %>% filter(!is.na(sleptim1)) %>% group_by(sleptim1) %>% summarise(count = n())
+Excel_health %>% summarise(mean_st = mean(sleptim1), sd_dd = sd(sleptim1), n = n())
+
+
+
+```
+
+* * *
+
+## Part 1: Data
+This is an observational study becuase it does not impose subjects to certain treatments, and does not interfere with how the data arises. The observations are collected using stratified sampling. The population is divided into stratas - the states, and then the population is randomly sampled within each strata. Because of this, and the fact that random assignment is not used, generalizability can be established, however, causality cannot be determined. 
+
+* * *
+
+## Part 2: Research questions
+
+**Research quesion 1:**
+Are people in some states more likely to complete the interview than others?
+
+**Research quesion 2:**
+Are fruit consumption and exercise standard across all states?
+
+**Research quesion 3:**
+Are vetarans more disposed to alcohol and tobacco use?
+* * *
+
+## Part 3: Exploratory data analysis
+
+**Research quesion 1:Are people in some states more likely to complete the interview than others?**
+This question is of interest because it could give insight to whether some regions of the country are more inclined to answer phone surveys and ultimately potentially more amiable than other parts of the country.
+```{r}
+q1<-data.frame(brfss2013$X_state,brfss2013$dispcode) #makes df for Research question #1
+q1<-q1[complete.cases(q1), ] #gets rid of NAs
+
+head(q1,n = 5)
+```
+This is the data frame that will be used to answer the first question - Are people in some states more likely to complete the interview than others?
+
+```{r}
+tbq1<-q1%>% #use this to graph
+group_by(brfss2013.X_state)%>%
+summarise(dispct = sum(brfss2013.dispcode=='Completed interview')*100/n())
+
+head(tbq1,5)
+
+mean(tbq1$dispct)
+median(tbq1$dispct)
+```
+
+This shows that this data is slightly skewed to the left. This is verified by both the fact that the median is higher than the mean and that the graph is more bunched up towards the right hand side of the graph below.
+
+```{r}
+ggplot(data=tbq1,aes(x=brfss2013.X_state, y=dispct))+geom_bar(stat='identity', fill='#99badd', colour='black') + geom_hline(aes(yintercept=mean(dispct)))
+
+ggplot(data=tbq1, aes(x=dispct)) + geom_histogram(bins=50)
+
+```
+
+It should be noted that California is an outlier with 75.1% of its surveys completed in full.
+
+**Research quesion 2:Are fruit consumption and exercise standard across all states?**
+The author of this exploratory data analysis hopes to live all througout the country while maintaining a healthy lifestlye. The author would like to be surrounded by people living healthy lifestyles: eating fruits and exercising regularly.
+```{r}
+grep("frut", names(brfss2013), value = TRUE)
+grep("pain", names(brfss2013), value = TRUE)
+```
+
+The console was throwing an error, so the grep function was run in order to find the correct column name.
+```{r}
+NROW(is.na(brfss2013$X_state))
+NROW(is.na(brfss2013$X_paindx1))
+NROW(is.na(brfss2013$frutda1_))
+```
+An error was being thrown saying that the number of rows was not equal, so each row was checked individually.
+
+```{r}
+q2<-data.frame(brfss2013$X_state,brfss2013$X_paindx1,brfss2013$frutda1_)
+q2<-q2[complete.cases(q2), ] #gets rid of NAs
+
+head(q2, 5)
+
+q2tib<-q2%>%
+group_by(brfss2013.X_state)%>%
+summarise(fruit_consumpt = sum(brfss2013.frutda1_))
+
+head(q2tib,5)
+
+ggplot(data=q2tib,aes(x=brfss2013.X_state, y=fruit_consumpt))+geom_bar(stat='identity', width = 0.5,fill = "#99badd",colour='black' ) + geom_hline(aes(yintercept=mean(fruit_consumpt)))
+
+```
+
+This plot show that there is great variation between the different states surveyed. The horizontal line is the mean for fruit consumption across all states.
+
+**Research quesion 3: Are vetarans more disposed to alcohol and tobacco use?**
+```{r}
+DFtest<-data.frame(brfss2013$veteran3,brfss2013$smoke100,brfss2013$drnkany5) #makes df for Research question #3 pt2
+DFtest<-DFtest[complete.cases(DFtest), ] #gets rid of NAs
+```
+
+The above code creates the data frame that will be used to make the tibble, a variation of the standard data frame, tibDFtest. The tibble will be summarized and the percentage of smokers and people who have had alcohol in the last 30 days will be calculated based on veteran status. This tibble is below.
+
+```{r}
+tibDFtest<-DFtest%>%
+group_by(brfss2013.veteran3)%>%
+summarise(alcperct = sum(brfss2013.drnkany5 == 'Yes')/n(), smokeperct = sum(brfss2013.smoke100 == 'Yes')/n())
+
+tibDFtest
+```
+
+```{r}
+ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=alcperct))+geom_bar(stat='identity', width = 0.5,fill = "#99badd",colour='black' )
+
+ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=smokeperct))+geom_bar(stat='identity', fill='#99badd', colour='black')
+
+```
+
+The graphs show that there is not much difference between veterans and non-veterans based on drinking habits in the last 30 days. However, there is a more stark contrast between those and their smoking habits. Given the generalizability of the study, these observations can be generalized, but no causal relationship can be determined.
