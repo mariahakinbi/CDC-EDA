@@ -1,5 +1,7 @@
 # Basic .gitattributes for a R repo.
 
+* text=auto
+
 # Source files
 # ============
 *.Rdata     text
