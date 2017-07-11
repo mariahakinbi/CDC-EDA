@@ -27,6 +27,16 @@ your work.
 load("brfss2013.RData")
 ```
 
+```{r}
+data <-brfss2013%>%
+```
+
+
+```{r}
+plot_ly(data=iris, x= ~Sepal.Length, y = ~Petal.Length)
+```
+
+
 Testing a gradee's paper below
 ```{r}
 Excel_health <- brfss2013 %>% filter(genhlth == "Excellent")
@@ -41,9 +51,6 @@ mean(Excel_health$sleptim1)
 
 brfss2013 %>% filter(!is.na(sleptim1)) %>% group_by(sleptim1) %>% summarise(count = n())
 Excel_health %>% summarise(mean_st = mean(sleptim1), sd_dd = sd(sleptim1), n = n())
-
-
-
 ```
 
 * * *
