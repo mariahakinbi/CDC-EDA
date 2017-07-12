@@ -28,12 +28,23 @@ load("brfss2013.RData")
 ```
 
 ```{r}
-data <-brfss2013%>%
+df <-select(brfss2013, 'sleptim1','frutda1_')
+head(df,5)
+df<-df[complete.cases(df), ] #gets rid of NAs
+head(df,5)
+plot_ly(data=df[c(0:100),], x= ~sleptim1, y = ~frutda1_)
 ```
 
 
 ```{r}
-plot_ly(data=iris, x= ~Sepal.Length, y = ~Petal.Length)
+head(df,5)
+fruitmeandf<-df%>%
+  group_by(sleptim1)%>%
+  summarise(fruitmean = mean(frutda1_))
+head(fruitmeandf,5)
+
+overallfruitmean = round(mean(fruitmeandf$fruitmean), digits = 2)
+plot_ly(fruitmeandf, x=~sleptim1, y=~fruitmean, type = 'scatter', mode = 'markers')
 ```
 
 
@@ -76,35 +87,50 @@ Are vetarans more disposed to alcohol and tobacco use?
 
 **Research quesion 1:Are people in some states more likely to complete the interview than others?**
 This question is of interest because it could give insight to whether some regions of the country are more inclined to answer phone surveys and ultimately potentially more amiable than other parts of the country.
+
+Below is the head of the data frame that will be used for the first question:
 ```{r}
-q1<-data.frame(brfss2013$X_state,brfss2013$dispcode) #makes df for Research question #1
+q1<-data.frame(brfss2013$X_state,brfss2013$dispcode, stringsAsFactors = FALSE)
 q1<-q1[complete.cases(q1), ] #gets rid of NAs
-
-head(q1,n = 5)
+head(q1, 5)
 ```
-This is the data frame that will be used to answer the first question - Are people in some states more likely to complete the interview than others?
 
 ```{r}
-tbq1<-q1%>% #use this to graph
-group_by(brfss2013.X_state)%>%
-summarise(dispct = sum(brfss2013.dispcode=='Completed interview')*100/n())
-
-head(tbq1,5)
-
-mean(tbq1$dispct)
-median(tbq1$dispct)
+new_dispctdf<- q1%>%
+  group_by(brfss2013.X_state)%>%
+  summarise(completion_rate = sum(brfss2013.dispcode=='Completed interview')*100/n())
+head(new_dispctdf,5)
+mean(new_dispctdf$completion_rate)
+median(new_dispctdf$completion_rate)
+IQR(new_dispctdf$completion_rate)
 ```
-
-This shows that this data is slightly skewed to the left. This is verified by both the fact that the median is higher than the mean and that the graph is more bunched up towards the right hand side of the graph below.
 
 ```{r}
-ggplot(data=tbq1,aes(x=brfss2013.X_state, y=dispct))+geom_bar(stat='identity', fill='#99badd', colour='black') + geom_hline(aes(yintercept=mean(dispct)))
+new_dispctdf$brfss2013.X_state <- factor(new_dispctdf$brfss2013.X_state, levels = unique(new_dispctdf$brfss2013.X_state)[order(new_dispctdf$completion_rate, decreasing = TRUE)])
 
-ggplot(data=tbq1, aes(x=dispct)) + geom_histogram(bins=50)
-
+plot_ly(new_dispctdf,
+        x = ~brfss2013.X_state,
+        y = ~completion_rate,
+        type = 'bar',
+        name = "Interview Completion Rate",
+        marker = list(
+          color = '#99badd'
+        )) %>%
+  layout(
+    title = 'INTERVIEW COMPLETION RATE BY STATE',
+    xaxis = list(
+      title = "States",
+      showticklabels = FALSE
+      ),
+    yaxis = list(
+      title = "Completion Rate"
+      )
+  )
 ```
 
-It should be noted that California is an outlier with 75.1% of its surveys completed in full.
+>>EXPLAIN: This shows that this data is slightly skewed to the left. This is verified by both the fact that the median is higher than the mean and that the graph is more bunched up towards the right hand side of the graph below.
+
+>>VERIFY THIS: It should be noted that California is an outlier with 75.1% of its surveys completed in full.
 
 **Research quesion 2:Are fruit consumption and exercise standard across all states?**
 The author of this exploratory data analysis hopes to live all througout the country while maintaining a healthy lifestlye. The author would like to be surrounded by people living healthy lifestyles: eating fruits and exercising regularly.
