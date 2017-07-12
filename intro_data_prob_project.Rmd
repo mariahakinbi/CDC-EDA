@@ -114,7 +114,8 @@ plot_ly(new_dispctdf,
         type = 'bar',
         name = "Interview Completion Rate",
         marker = list(
-          color = '#99badd'
+          color = ~completion_rate,
+          colorscale = 'Portland'
         )) %>%
   layout(
     title = 'INTERVIEW COMPLETION RATE BY STATE',
