@@ -19,9 +19,6 @@ library(plotly)
 
 ### Load data
 
-Make sure your data and R Markdown files are in the same directory. When loaded
-your data file will be called `brfss2013`. Delete this note when before you submit 
-your work. 
 
 ```{r load-data}
 load("brfss2013.RData")
@@ -148,19 +145,47 @@ NROW(is.na(brfss2013$frutda1_))
 ```
 An error was being thrown saying that the number of rows was not equal, so each row was checked individually.
 
+
 ```{r}
 q2<-data.frame(brfss2013$X_state,brfss2013$X_paindx1,brfss2013$frutda1_)
 q2<-q2[complete.cases(q2), ] #gets rid of NAs
 
 head(q2, 5)
+```
 
-q2tib<-q2%>%
-group_by(brfss2013.X_state)%>%
-summarise(fruit_consumpt = sum(brfss2013.frutda1_))
+```{r}
+new_fruitdf<-q2%>%
+  group_by(brfss2013.X_state)%>%
+  summarise(fruit_consumpt = sum(brfss2013.frutda1_))
 
 head(q2tib,5)
 
-ggplot(data=q2tib,aes(x=brfss2013.X_state, y=fruit_consumpt))+geom_bar(stat='identity', width = 0.5,fill = "#99badd",colour='black' ) + geom_hline(aes(yintercept=mean(fruit_consumpt)))
+new_fruitdf$brfss2013.X_state <- factor(new_fruitdf$brfss2013.X_state, levels = unique(new_fruitdf$brfss2013.X_state)[order(new_fruitdf$fruit_consumpt, decreasing = TRUE)])
+
+plot_ly(new_fruitdf,
+        x = ~brfss2013.X_state,
+        y = ~fruit_consumpt,
+        type = 'bar',
+        name = "Interview Completion Rate",
+        marker = list(
+          color = ~fruit_consumpt,
+          colorscale = 'Portland'
+        )) %>%
+  layout(
+    title = 'FRUIT CONSUMPTION BY STATE',
+    xaxis = list(
+      title = "States",
+      showticklabels = FALSE
+      ),
+    yaxis = list(
+      title = "Fruit Consumption"
+      )
+  )
+```
+
+
+```{r}
+ggplot(data=new_fruitdf,aes(x=brfss2013.X_state, y=fruit_consumpt))+geom_bar(stat='identity', width = 0.5,fill = "#99badd",colour='black' ) + geom_hline(aes(yintercept=mean(fruit_consumpt)))
 
 ```
 
@@ -183,7 +208,35 @@ tibDFtest
 ```
 
 ```{r}
-ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=alcperct))+geom_bar(stat='identity', width = 0.5,fill = "#99badd",colour='black' )
+plot_ly(tibDFtest,
+        x = ~brfss2013.veteran3,
+        y = ~alcperct,
+        type = 'bar',
+        name = "Drank Alcohol in the Last 30 Days",
+        marker = list(
+          color = '#99badd')
+        ) %>%
+  add_trace(y = ~smokeperct,
+            name = 'Smoked at Least 5 Packs of Cigarettes',
+            marker = list(
+          color = 'yellow')) %>%
+  layout(
+    title = '%',
+    xaxis = list(
+      title = "Veteran Status",
+      showticklabels = FALSE
+      ),
+    yaxis = list(
+      title = "% Who Drank Alcohol in the Last 30 Days"
+      ),
+    barmode = 'group'
+  )
+
+
+```
+
+```{r}
+ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=alcperct))+geom_bar(stat='identity', fill = "#99badd",colour='black' )
 
 ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=smokeperct))+geom_bar(stat='identity', fill='#99badd', colour='black')
 
