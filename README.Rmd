@@ -242,7 +242,7 @@ summarise(alcperct = sum(`Drink Status` == 'Yes')/n(), smokeperct = sum(`Smoke S
 smokedrinkTIB
 ```
 
-```{r}
+```{r, plotly=TRUE}
 plot_ly(smokedrinkTIB,
         x = c("Veteran", "Non-Veteran"),
         y = ~alcperct,

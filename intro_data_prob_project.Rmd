@@ -11,6 +11,7 @@ keep_md: true
 library(ggplot2)
 library(dplyr)
 library(plotly)
+packageVersion('plotly')
 ```
 
 ### Load data
