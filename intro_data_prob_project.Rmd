@@ -7,8 +7,6 @@ output:
     theme: spacelab
 ---
 
-## Setup
-
 ### Load packages
 
 ```{r load-packages, message = FALSE}
@@ -19,56 +17,19 @@ library(plotly)
 
 ### Load data
 
-
 ```{r load-data}
 load("brfss2013.RData")
 ```
 
-```{r}
-df <-select(brfss2013, 'sleptim1','frutda1_')
-head(df,5)
-df<-df[complete.cases(df), ] #gets rid of NAs
-head(df,5)
-plot_ly(data=df[c(0:100),], x= ~sleptim1, y = ~frutda1_)
-```
+* * *
 
-
-```{r}
-head(df,5)
-fruitmeandf<-df%>%
-  group_by(sleptim1)%>%
-  summarise(fruitmean = mean(frutda1_))
-head(fruitmeandf,5)
-
-overallfruitmean = round(mean(fruitmeandf$fruitmean), digits = 2)
-plot_ly(fruitmeandf, x=~sleptim1, y=~fruitmean, type = 'scatter', mode = 'markers')
-```
-
-
-Testing a gradee's paper below
-```{r}
-Excel_health <- brfss2013 %>% filter(genhlth == "Excellent")
-
-ggplot(data = Excel_health, aes(x = sleptim1)) + geom_histogram(binwidth = 1)
-
-mean(Excel_health$sleptim1)
-
-Excel_health<-Excel_health[complete.cases(Excel_health[ , c("sleptim1")]),]
-NROW(is.na(Excel_health$sleptim1))
-mean(Excel_health$sleptim1)
-
-brfss2013 %>% filter(!is.na(sleptim1)) %>% group_by(sleptim1) %>% summarise(count = n())
-Excel_health %>% summarise(mean_st = mean(sleptim1), sd_dd = sd(sleptim1), n = n())
-```
+# Part 1: The Data
+The data for this analysis was collected via phone interviews in 2013 by the CDC through its annual Behavior Risk Factor Surveillance System (BRFSS). The goal of BRFSS is to collect data on health practices and behaviors linked to diseases and injuries. It is an observational study because it does not impose subjects to certain treatments and does not interfere with how the data arises. The observations are collected using stratified sampling. The population is divided into stratas - the states, and then the population is randomly sampled within each strata. Because of this, and the fact that random assignment is not used, generalizability can be established, however, causality cannot be determined. 
 
 * * *
 
-## Part 1: Data
-This is an observational study becuase it does not impose subjects to certain treatments, and does not interfere with how the data arises. The observations are collected using stratified sampling. The population is divided into stratas - the states, and then the population is randomly sampled within each strata. Because of this, and the fact that random assignment is not used, generalizability can be established, however, causality cannot be determined. 
-
-* * *
-
-## Part 2: Research questions
+# Part 2: The Research Questions
+Below are research questions that are investigated in this analysis. 
 
 **Research quesion 1:**
 Are people in some states more likely to complete the interview than others?
@@ -78,40 +39,59 @@ Are fruit consumption and exercise standard across all states?
 
 **Research quesion 3:**
 Are vetarans more disposed to alcohol and tobacco use?
+
 * * *
 
-## Part 3: Exploratory data analysis
+# Part 3: Exploratory Data Analysis
 
-**Research quesion 1:Are people in some states more likely to complete the interview than others?**
-This question is of interest because it could give insight to whether some regions of the country are more inclined to answer phone surveys and ultimately potentially more amiable than other parts of the country.
+###Research quesion 1: Are people in some states more likely to complete the interview than others?
+Though it is often said that New Yorkers are notably less friendly and Southerners are more friendly than other parts of the country, this will be evaluated depending on the rate of interview completion for each geographical region interviewed. This question could give insight as to whether some regions of the country are more inclined to answer phone surveys and potentially more amiable than other parts of the country.
 
 Below is the head of the data frame that will be used for the first question:
 ```{r}
-q1<-data.frame(brfss2013$X_state,brfss2013$dispcode, stringsAsFactors = FALSE)
-q1<-q1[complete.cases(q1), ] #gets rid of NAs
-head(q1, 5)
+question1<-data.frame(brfss2013$X_state,brfss2013$dispcode, stringsAsFactors = FALSE) #use stringAsFactors=FALSE so I can change the order of the states on the plot<--more on this later
+question1<-question1[complete.cases(question1), ] #gets rid of NAs
+colnames(question1) <- c("State","Final Disposition")
+head(question1, 5)
 ```
 
+The completion rate for each state is then calculated by using: (completed interviews/total number of interviews) *100. The head of the resulting data frame is shown below:
 ```{r}
-new_dispctdf<- q1%>%
-  group_by(brfss2013.X_state)%>%
-  summarise(completion_rate = sum(brfss2013.dispcode=='Completed interview')*100/n())
-head(new_dispctdf,5)
-mean(new_dispctdf$completion_rate)
-median(new_dispctdf$completion_rate)
-IQR(new_dispctdf$completion_rate)
+disp_totals_df<- question1%>%
+  group_by(State)%>%
+  summarise(`Completion Rate` = round(sum(`Final Disposition`=='Completed interview')*100/n(), digits = 1))
+head(disp_totals_df,5)
 ```
 
+The mean, median, and IQR for the completion rates is calculated below.
 ```{r}
-new_dispctdf$brfss2013.X_state <- factor(new_dispctdf$brfss2013.X_state, levels = unique(new_dispctdf$brfss2013.X_state)[order(new_dispctdf$completion_rate, decreasing = TRUE)])
+completion_rate_mean <- round(mean(disp_totals_df$`Completion Rate`), digits = 1)
+completion_rate_median <- round(median(disp_totals_df$`Completion Rate`), digits = 1)
+completion_rate_IQR <- round(IQR(disp_totals_df$`Completion Rate`), digits = 1)
+completion_rate_SD <- round(sd(disp_totals_df$`Completion Rate`), digits = 1)
 
-plot_ly(new_dispctdf,
-        x = ~brfss2013.X_state,
-        y = ~completion_rate,
+cat("Mean:", completion_rate_mean, "% \n")
+cat("Median:", completion_rate_median, "% \n")
+cat("IQR:", completion_rate_IQR, "%\n")
+cat("Std. Dev:", completion_rate_SD, "%")
+```
+The median (88.6%) is slighly higher than the mean (88.3%) which suggests that the data is slightly skewed to the left. 
+
+Plotly plots strings factors, aka word/categorical variables, alphabetically. In order to plot the completion rates in descending order numerically, these string factors (the states' names) needed to have their level orders reset. Basically the states needed to be re-ordered based on their completion rates, not their spelling, which is the plotly default.
+```{r}
+disp_totals_df$State <- factor(disp_totals_df$State, levels = unique(disp_totals_df$State)[order(disp_totals_df$`Completion Rate`, decreasing = TRUE)])
+```
+
+
+
+```{r}
+f <- plot_ly(disp_totals_df,
+        x = ~State,
+        y = ~`Completion Rate`,
         type = 'bar',
         name = "Interview Completion Rate",
         marker = list(
-          color = ~completion_rate,
+          color = ~`Completion Rate`,
           colorscale = 'Portland'
         )) %>%
   layout(
@@ -124,53 +104,94 @@ plot_ly(new_dispctdf,
       title = "Completion Rate"
       )
   )
+
+ff <- plot_ly(disp_totals_df,
+              y = ~`Completion Rate`,
+              type = "box",
+              boxpoints = "all",
+              jitter = 0.3,
+              pointpos = -1.8,
+              width = 900,
+              height = 500,
+              hoverinfo = "y",
+              name = 'Boxplot')
+
+LASDOS<-subplot(f,ff)
+
+LASDOS
+
 ```
 
->>EXPLAIN: This shows that this data is slightly skewed to the left. This is verified by both the fact that the median is higher than the mean and that the graph is more bunched up towards the right hand side of the graph below.
+Given that this is not a histogram, the skew that is seen in the summary statistics cannot be determined on this bar chart. However, it should be noted that California is an outlier, sitting almost 3 standard deviations away from the mean, at a survey completion rate of 75.2%. On the other hand, Puerto Rico sits at a survey completion rate of 97.1%, which is a full percentage point higher than the next, Tennessee. New York, notably, had the 6th lowest completion rate, 81.7%
 
->>VERIFY THIS: It should be noted that California is an outlier with 75.1% of its surveys completed in full.
+Further analysis: When grouped by Time Zone or by region (Northeast, South, Midwest, etc.) are differences observed?
 
-**Research quesion 2:Are fruit consumption and exercise standard across all states?**
-The author of this exploratory data analysis hopes to live all througout the country while maintaining a healthy lifestlye. The author would like to be surrounded by people living healthy lifestyles: eating fruits and exercising regularly.
+###Research quesion 2: Are fruit consumption standard across all states?
+Maintaining a healthy lifestyle is sought after by many. Science has backed that this is best achieved in the kitchen - starting with the food one eats. The organic food industry boasts $40+ billion in sales, of which more than 90% were in the food industry. Fruit is often incorporated into healthy lifestyles and can be used as a measure of "healthiness", but much like all things - too much fruit is not good.
+
+The factors (variables) names listed on the CDC's website, did not align with the data. As a result, the console was throwing an error, so the grep function was used to search for all of the variables with similar names in the hopes of finding the correct variable name.
 ```{r}
 grep("frut", names(brfss2013), value = TRUE)
 grep("pain", names(brfss2013), value = TRUE)
 ```
 
-The console was throwing an error, so the grep function was run in order to find the correct column name.
+The observations that were listed as 'NA' for missing values were removed from the data frame.
 ```{r}
 NROW(is.na(brfss2013$X_state))
-NROW(is.na(brfss2013$X_paindx1))
 NROW(is.na(brfss2013$frutda1_))
 ```
-An error was being thrown saying that the number of rows was not equal, so each row was checked individually.
 
-
+The fruit factor, frutda1_, corresponds to the fruit intake in 1 day. The head of the data frame for that will be used for this question is shown below.
 ```{r}
-q2<-data.frame(brfss2013$X_state,brfss2013$X_paindx1,brfss2013$frutda1_)
-q2<-q2[complete.cases(q2), ] #gets rid of NAs
+question2 <- data.frame(brfss2013$X_state,brfss2013$frutda1_)
+question2 <- question2[complete.cases(question2), ] #gets rid of NAs
+colnames(question2) <- c("State","Computed Fruit Consumed")
+head(question2, 5)
+```
 
-head(q2, 5)
+
+The total fruit consumption in 1 day by each state is computed and the head of this data frame is shown below.
+```{r}
+fruitdf<-question2%>%
+  group_by(State)%>%
+  summarise(`Computed Fruit Consumed Mean` = round(mean(`Computed Fruit Consumed`),digits = 1))
+
+head(fruitdf,5)
+```
+
+The mean, median, IQR, and standard deviation is computed for the total fruit consumption across all states.
+```{r}
+fruit_mean <- round(mean(fruitdf$`Computed Fruit Consumed Mean`), digits = 1)
+fruit_median <- round(median(fruitdf$`Computed Fruit Consumed Mean`), digits = 1)
+fruit_IQR <- round(IQR(fruitdf$`Computed Fruit Consumed Mean`), digits = 1)
+fruit_SD <- round(sd(fruitdf$`Computed Fruit Consumed Mean`), digits = 1)
+fruit_range <- max(fruitdf$`Computed Fruit Consumed Mean`) - min(fruitdf$`Computed Fruit Consumed Mean`)
+
+cat("Mean:", prettyNum(fruit_mean, big.mark=",",scientific=FALSE), "\n") #prettyNum() adds the comma separator to the numbers
+cat("Median:", prettyNum(fruit_median, big.mark=",",scientific=FALSE), "\n")
+cat("IQR:", prettyNum(fruit_IQR, big.mark=",",scientific=FALSE), "\n")
+cat("Std. Dev:", prettyNum(fruit_SD, big.mark=",",scientific=FALSE), "\n")
+cat("Range:", prettyNum(fruit_range, big.mark=",",scientific=FALSE))
+```
+Given that the median is higher than the mean, this suggests that the data is skewed to the left.
+
+Similar to the first question, in order to plot in decreasing order, the state names had to be reordered.
+```{r}
+fruitdf$State <- factor(fruitdf$State, levels = unique(fruitdf$State)[order(fruitdf$`Computed Fruit Consumed Mean`, decreasing = TRUE)])
 ```
 
 ```{r}
-new_fruitdf<-q2%>%
-  group_by(brfss2013.X_state)%>%
-  summarise(fruit_consumpt = sum(brfss2013.frutda1_))
-
-head(q2tib,5)
-
-new_fruitdf$brfss2013.X_state <- factor(new_fruitdf$brfss2013.X_state, levels = unique(new_fruitdf$brfss2013.X_state)[order(new_fruitdf$fruit_consumpt, decreasing = TRUE)])
-
-plot_ly(new_fruitdf,
-        x = ~brfss2013.X_state,
-        y = ~fruit_consumpt,
+g <-plot_ly(fruitdf,
+        x = ~State,
+        y = ~`Computed Fruit Consumed Mean`,
         type = 'bar',
-        name = "Interview Completion Rate",
+        name = "Computed Fruit Consumed",
         marker = list(
-          color = ~fruit_consumpt,
+          color = ~`Computed Fruit Consumed Mean`,
           colorscale = 'Portland'
-        )) %>%
+        ),
+         width = 1000,
+         height = 500) %>%
   layout(
     title = 'FRUIT CONSUMPTION BY STATE',
     xaxis = list(
@@ -178,20 +199,32 @@ plot_ly(new_fruitdf,
       showticklabels = FALSE
       ),
     yaxis = list(
-      title = "Fruit Consumption"
+      title = "Total Fruit Consumption"
       )
   )
+
+gg <- plot_ly(fruitdf,
+              y = ~`Computed Fruit Consumed Mean`,
+              type = "box",
+              boxpoints = "all",
+              jitter = 0.3,
+              pointpos = -1.8,
+              width = 900,
+              height = 500,
+              hoverinfo = "y",
+              name = 'Boxplot')
+
+BOTHPLOTS<-subplot(g,gg)
+
+BOTHPLOTS
 ```
+In the first run of the analysis, the total fruit consumed by state was calculated. However in the plot produced, Florida was an obvious outlier and sat at over 3,000,000 fruits consumed in 1 day, which upon further thought - total fruit consumed by state seemed an inaccurate measure. This is especially so because the number of people interviewed in each state varied greatly, and thus the amount of fruit consumed varied greatly. In the second iteration, the mean of the computed fruit consumed was calculated. This has been deemed a better indicator and has a lot less bias than the previous iteration. The second iteration is plotted above. California (129.2) and Puerto Rico (60.0) are notable outliers on differing ends of the spectrum. California is ~2 standard deviations above the mean, while Puerto Rico is ~3 standard deviations below the mean. Puerto Rico's large variance is a contributing factor to the skew of the data. One observation that is surprising is that Hawaii is in the top 50% with a mean of 105.2 computed fruits consumed per day. Fruit, and food in general, is more expensive in Hawaii given that almost everythng has to be flown in to the state. It is surprising that even with high prices of fruit products, Hawaii sits surprisingly high on the spectrum.
 
+Future Analysis: Compute total fruit consumed per capita and per person interviewed.
 
-```{r}
-ggplot(data=new_fruitdf,aes(x=brfss2013.X_state, y=fruit_consumpt))+geom_bar(stat='identity', width = 0.5,fill = "#99badd",colour='black' ) + geom_hline(aes(yintercept=mean(fruit_consumpt)))
+It should be noted that it has not been determined how the CDC computed the "computed fruit consumed" factor.
 
-```
-
-This plot show that there is great variation between the different states surveyed. The horizontal line is the mean for fruit consumption across all states.
-
-**Research quesion 3: Are vetarans more disposed to alcohol and tobacco use?**
+###Research quesion 3: Are vetarans more disposed to alcohol and tobacco use?
 ```{r}
 DFtest<-data.frame(brfss2013$veteran3,brfss2013$smoke100,brfss2013$drnkany5) #makes df for Research question #3 pt2
 DFtest<-DFtest[complete.cases(DFtest), ] #gets rid of NAs
@@ -209,37 +242,31 @@ tibDFtest
 
 ```{r}
 plot_ly(tibDFtest,
-        x = ~brfss2013.veteran3,
+        x = c("Veteran", "Non-Veteran"),
         y = ~alcperct,
         type = 'bar',
         name = "Drank Alcohol in the Last 30 Days",
         marker = list(
-          color = '#99badd')
+          color = 'cornflowerblue')
         ) %>%
   add_trace(y = ~smokeperct,
             name = 'Smoked at Least 5 Packs of Cigarettes',
             marker = list(
-          color = 'yellow')) %>%
+          color = 'deeppink2')) %>%
   layout(
-    title = '%',
+    title = 'Smoking & Drinking Among Veterans and Non-Veterans',
     xaxis = list(
       title = "Veteran Status",
-      showticklabels = FALSE
+      labels=c("Non-Veteran", "Veteran")
       ),
     yaxis = list(
-      title = "% Who Drank Alcohol in the Last 30 Days"
+      title = "%"
       ),
     barmode = 'group'
   )
-
-
-```
-
-```{r}
-ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=alcperct))+geom_bar(stat='identity', fill = "#99badd",colour='black' )
-
-ggplot(data=tibDFtest,aes(x=brfss2013.veteran3, y=smokeperct))+geom_bar(stat='identity', fill='#99badd', colour='black')
-
 ```
 
 The graphs show that there is not much difference between veterans and non-veterans based on drinking habits in the last 30 days. However, there is a more stark contrast between those and their smoking habits. Given the generalizability of the study, these observations can be generalized, but no causal relationship can be determined.
+
+
+*Source: https://www.ota.com/news/press-releases/19031
