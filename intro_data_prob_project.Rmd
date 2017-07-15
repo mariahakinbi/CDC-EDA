@@ -225,23 +225,28 @@ Future Analysis: Compute total fruit consumed per capita and per person intervie
 It should be noted that it has not been determined how the CDC computed the "computed fruit consumed" factor.
 
 ###Research quesion 3: Are vetarans more disposed to alcohol and tobacco use?
+It has long been noted that a signficant number of veterans suffer from PTSD after service, but how does the prevalence of drinking alcohol compare with non-veterans?
+
+The head of the data frame used to answer this question is below.
 ```{r}
-DFtest<-data.frame(brfss2013$veteran3,brfss2013$smoke100,brfss2013$drnkany5) #makes df for Research question #3 pt2
-DFtest<-DFtest[complete.cases(DFtest), ] #gets rid of NAs
+question3<-data.frame(brfss2013$veteran3,brfss2013$smoke100,brfss2013$drnkany5) #makes df for Research question #3 pt2
+question3<-question3[complete.cases(question3), ] #gets rid of NAs
+colnames(question3) <- c("Veteran Status","Smoke Status", "Drink Status")
+head(question3, 5)
 ```
 
-The above code creates the data frame that will be used to make the tibble, a variation of the standard data frame, tibDFtest. The tibble will be summarized and the percentage of smokers and people who have had alcohol in the last 30 days will be calculated based on veteran status. This tibble is below.
+The above code creates the data frame that will be used to make the tibble, a variation of the standard data frame, smokedrinkTIB. The tibble will be summarized and the percentage of smokers and people who have had alcohol in the last 30 days will be calculated based on veteran status. This tibble is below.
 
 ```{r}
-tibDFtest<-DFtest%>%
-group_by(brfss2013.veteran3)%>%
-summarise(alcperct = sum(brfss2013.drnkany5 == 'Yes')/n(), smokeperct = sum(brfss2013.smoke100 == 'Yes')/n())
+smokedrinkTIB<-question3%>%
+group_by(`Veteran Status`)%>%
+summarise(alcperct = sum(`Drink Status` == 'Yes')/n(), smokeperct = sum(`Smoke Status` == 'Yes')/n())
 
-tibDFtest
+smokedrinkTIB
 ```
 
 ```{r}
-plot_ly(tibDFtest,
+plot_ly(smokedrinkTIB,
         x = c("Veteran", "Non-Veteran"),
         y = ~alcperct,
         type = 'bar',
@@ -266,7 +271,6 @@ plot_ly(tibDFtest,
   )
 ```
 
-The graphs show that there is not much difference between veterans and non-veterans based on drinking habits in the last 30 days. However, there is a more stark contrast between those and their smoking habits. Given the generalizability of the study, these observations can be generalized, but no causal relationship can be determined.
-
+The graphs show that there is no difference of significance between veterans and non-veterans based on drinking habits in the last 30 days. However, there is a more stark contrast in smoking habits, as is expected. Given the generalizability of the study, these observations can be generalized, but no causal relationship can be determined.
 
 *Source: https://www.ota.com/news/press-releases/19031
