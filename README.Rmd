@@ -108,7 +108,7 @@ ff <- plot_ly(disp_totals_df,
               boxpoints = "all",
               jitter = 0.3,
               pointpos = -1.8,
-              width = 900,
+              width = 800,
               height = 500,
               hoverinfo = "y",
               name = 'Boxplot')
@@ -118,6 +118,8 @@ LASDOS<-subplot(f,ff)
 LASDOS
 
 ```
+
+
 
 Given that this is not a histogram, the skew that is seen in the summary statistics cannot be determined on this bar chart. However, it should be noted that California is an outlier, sitting almost 3 standard deviations away from the mean, at a survey completion rate of 75.2%. On the other hand, Puerto Rico sits at a survey completion rate of 97.1%, which is a full percentage point higher than the next, Tennessee. New York, notably, had the 6th lowest completion rate, 81.7%
 
@@ -190,13 +192,13 @@ g <-plot_ly(fruitdf,
          width = 1000,
          height = 500) %>%
   layout(
-    title = 'FRUIT CONSUMPTION BY STATE',
+    title = 'AVERAGE FRUIT CONSUMPTION BY STATE',
     xaxis = list(
-      title = "States",
+      title = 'States',
       showticklabels = FALSE
       ),
     yaxis = list(
-      title = "Total Fruit Consumption"
+      title = 'Total Fruit Consumption'
       )
   )
 
@@ -206,7 +208,7 @@ gg <- plot_ly(fruitdf,
               boxpoints = "all",
               jitter = 0.3,
               pointpos = -1.8,
-              width = 900,
+              width = 800,
               height = 500,
               hoverinfo = "y",
               name = 'Boxplot')
